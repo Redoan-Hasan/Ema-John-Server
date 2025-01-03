@@ -9,10 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 
-console.log('DB_USER:', process.env.DB_USER);
-console.log('DB_PASS:', process.env.DB_PASS);
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qhz4s.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -34,13 +32,28 @@ async function run() {
     const productCollection = client.db('emaJohnDB').collection('products');
 
     app.get('/products', async(req, res) => {
-        const result = await productCollection.find().toArray();
+        console.log(req.query); 
+        const page = parseInt(req?.query?.page);
+        const size = parseInt( req?.query?.size);
+        const result = await productCollection.find().skip(page * size).limit(size).toArray();
         res.send(result);
     })
 
+    app.post('/orderedProductsByIds', async(req,res)=>{
+      const ids = req?.body;
+      const idsWithNewObjectId = ids?.map(id=>new ObjectId(id))
+      const query = {
+        _id : {
+          $in : idsWithNewObjectId
+        }
+      }
+      const result = await productCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get('/productsCount', async(req, res) => {
-        const result = await productCollection.estimatedDocumentCount();
-        res.send({count: result});
+        const count = await productCollection.estimatedDocumentCount();
+        res.send({ count});
     })
 
     // Send a ping to confirm a successful connection
