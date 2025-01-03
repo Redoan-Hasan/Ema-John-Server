@@ -31,6 +31,8 @@ async function run() {
 
     const productCollection = client.db('emaJohnDB').collection('products');
 
+
+    // pagination
     app.get('/products', async(req, res) => {
         console.log(req.query); 
         const page = parseInt(req?.query?.page);
@@ -39,6 +41,7 @@ async function run() {
         res.send(result);
     })
 
+    // filtering using mongodb operator 
     app.post('/orderedProductsByIds', async(req,res)=>{
       const ids = req?.body;
       const idsWithNewObjectId = ids?.map(id=>new ObjectId(id))
